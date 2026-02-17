@@ -1,0 +1,155 @@
+/*
+ * Set_ADC.c
+ *
+ *  Created on: 2021. 4. 13.
+ *      Author: Plasma Science
+ */
+
+#include "UserDefine.h"
+
+void Init_ADC(unsigned int CHSEL, Uint16 ACQPS)
+{
+    //    ADC_setVREF(ADCA_BASE, ADC_REFERENCE_EXTERNAL, ADC_REFERENCE_3_3V);
+    //    ADC_setVREF(ADCB_BASE, ADC_REFERENCE_EXTERNAL, ADC_REFERENCE_3_3V);
+    //    ADC_setVREF(ADCC_BASE, ADC_REFERENCE_EXTERNAL, ADC_REFERENCE_3_3V);
+
+    //    ADC_setPrescaler(ADCA_BASE, ADC_CLK_DIV_4_0);
+    //    ADC_setInterruptPulseMode(ADCA_BASE, ADC_PULSE_END_OF_CONV);
+    //    ADC_enableConverter(ADCA_BASE);
+
+    //    DELAY_US(1000);
+
+    //    ADC_setupSOC(ADCA_BASE, ADC_SOC_NUMBER0, ADC_TRIGGER_EPWM1_SOCA,
+    //                 ADC_CH_ADCIN0, 9);
+    //    ADC_setupSOC(ADCA_BASE, ADC_SOC_NUMBER1, ADC_TRIGGER_EPWM1_SOCA,
+    //                 ADC_CH_ADCIN1, 9);
+    //    ADC_setupSOC(ADCA_BASE, ADC_SOC_NUMBER2, ADC_TRIGGER_EPWM1_SOCA,
+    //                 ADC_CH_ADCIN2, 9);
+    //
+    //    ADC_setInterruptSource(ADCA_BASE, ADC_INT_NUMBER1, ADC_SOC_NUMBER1);
+    //    ADC_enableInterrupt(ADCA_BASE, ADC_INT_NUMBER1);
+    //    ADC_clearInterruptStatus(ADCA_BASE, ADC_INT_NUMBER1);
+
+    //    ADC_setPrescaler(ADCB_BASE, ADC_CLK_DIV_4_0);
+    //    ADC_setInterruptPulseMode(ADCB_BASE, ADC_PULSE_END_OF_CONV);
+    //    ADC_enableConverter(ADCB_BASE);
+
+    //    DELAY_US(1000);
+
+    //    ADC_setupSOC(ADCB_BASE, ADC_SOC_NUMBER0, ADC_TRIGGER_EPWM1_SOCA,
+    //                 ADC_CH_ADCIN0, 9);
+    //    ADC_setupSOC(ADCB_BASE, ADC_SOC_NUMBER1, ADC_TRIGGER_EPWM1_SOCA,
+    //                 ADC_CH_ADCIN1, 9);
+    //    ADC_setupSOC(ADCB_BASE, ADC_SOC_NUMBER2, ADC_TRIGGER_EPWM1_SOCA,
+    //                 ADC_CH_ADCIN2, 9);
+
+    //    ADC_setPrescaler(ADCC_BASE, ADC_CLK_DIV_4_0);
+    //    ADC_setInterruptPulseMode(ADCC_BASE, ADC_PULSE_END_OF_CONV);
+    //    ADC_enableConverter(ADCC_BASE);
+
+    //    DELAY_US(1000);
+
+    //    ADC_setupSOC(ADCC_BASE, ADC_SOC_NUMBER0, ADC_TRIGGER_EPWM1_SOCA,
+    //                 ADC_CH_ADCIN0, 9);
+    //    ADC_setupSOC(ADCC_BASE, ADC_SOC_NUMBER1, ADC_TRIGGER_EPWM1_SOCA,
+    //                 ADC_CH_ADCIN1, 9);
+    //    ADC_setupSOC(ADCC_BASE, ADC_SOC_NUMBER2, ADC_TRIGGER_EPWM1_SOCA,
+    //                 ADC_CH_ADCIN2, 9);
+
+//Setup VREF as external
+    ADC_setVREF(ADCA_BASE, ADC_REFERENCE_EXTERNAL, ADC_REFERENCE_3_3V);
+
+    // ADC 모드 설정 및 Power-up
+    EALLOW;
+    AdcaRegs.ADCCTL2.bit.PRESCALE = 6;                  // ADCCLK = SYSCLK / 4 = 25Mhz , SYSCLK = 100MHz
+    AdcaRegs.ADCCTL1.bit.INTPULSEPOS = 1;               // ADC Interrupt Pulse Position: 변환종료 후 발생
+    AdcaRegs.ADCCTL1.bit.ADCPWDNZ = 1;                  // ADC 시동(Power-up)
+
+
+
+    EDIS;
+    DELAY_US(1000);                                     // ADC가 시동되는 동안 1ms 지연
+
+    // ADC SOC(채널, S/H시간, 트리거소스) 및 인터럽트 설정
+    // SOC0 will convert pin A1
+    // 0:A0  1:A1  2:A2  3:A3
+    // 4:A4   5:A5   6:A6   7:A7
+    // 8:A8   9:A9   A:A10  B:A11
+    // C:A12  D:A13  E:A14  F:A15
+    EALLOW;
+
+    AdcaRegs.ADCSOC0CTL.bit.CHSEL = 0;            // SOC0 : ADCINA0 채널 변환 (DAC0)
+    AdcaRegs.ADCSOC0CTL.bit.ACQPS = ACQPS;              // (S/H 시간) 설정 ACQPS = 9, 100ns = (ACQPS+1)/SYSCLK
+    AdcaRegs.ADCSOC0CTL.bit.TRIGSEL = 5;                // SOC0: ePWM1 SOCA/C로 트리거
+
+    AdcaRegs.ADCSOC1CTL.bit.CHSEL = 1;            // SOC1 : ADCINA1 채널 변환
+    AdcaRegs.ADCSOC1CTL.bit.ACQPS = ACQPS;              // (S/H 시간) 설정 ACQPS = 9, 100ns = (ACQPS+1)/SYSCLK
+    AdcaRegs.ADCSOC1CTL.bit.TRIGSEL = 5;                // SOC1: ePWM1 SOCA/C로 트리거
+
+    AdcaRegs.ADCSOC2CTL.bit.CHSEL = 2;            // SOC2 : ADCINA2 채널 변환
+    AdcaRegs.ADCSOC2CTL.bit.ACQPS = ACQPS;              // (S/H 시간) 설정 ACQPS = 9, 100ns = (ACQPS+1)/SYSCLK
+    AdcaRegs.ADCSOC2CTL.bit.TRIGSEL = 5;                // SOC2: ePWM1 SOCA/C로 트리거
+
+    AdcaRegs.ADCINTSEL1N2.bit.INT1SEL = 2; //end of SOC1 will set INT1 flag
+    AdcaRegs.ADCINTSEL1N2.bit.INT1E = 1;   //enable INT1 flag
+    AdcaRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //make sure INT1 flag is cleared
+
+
+
+
+
+    EDIS;
+
+    //Setup VREF as external
+    ADC_setVREF(ADCB_BASE, ADC_REFERENCE_EXTERNAL, ADC_REFERENCE_3_3V);
+
+    // ADC 모드 설정 및 Power-up
+    EALLOW;
+    AdcbRegs.ADCCTL2.bit.PRESCALE = 6;                  // ADCCLK = SYSCLK / 4 = 25Mhz , SYSCLK = 100MHz
+    AdcbRegs.ADCCTL1.bit.INTPULSEPOS = 1;               // ADC Interrupt Pulse Position: 변환종료 후 발생
+    AdcbRegs.ADCCTL1.bit.ADCPWDNZ = 1;                  // ADC 시동(Power-up)
+    DELAY_US(1000);                                     // ADC가 시동되는 동안 1ms 지연
+    EDIS;
+
+    // ADC SOC(채널, S/H시간, 트리거소스) 및 인터럽트 설정
+    EALLOW;
+
+    AdcbRegs.ADCSOC0CTL.bit.CHSEL = 0;              // SOC0 : ADCINB0 채널 변환
+    AdcbRegs.ADCSOC0CTL.bit.ACQPS = ACQPS;              // (S/H 시간) 설정 ACQPS = 9, 100ns = (ACQPS+1)/SYSCLK
+    AdcbRegs.ADCSOC0CTL.bit.TRIGSEL = 5;                // SOC0: ePWM1 SOCA/C로 트리거
+
+    AdcbRegs.ADCSOC1CTL.bit.CHSEL = 1;            // SOC1 : ADCINB1 채널 변환
+    AdcbRegs.ADCSOC1CTL.bit.ACQPS = ACQPS;              // (S/H 시간) 설정 ACQPS = 9, 100ns = (ACQPS+1)/SYSCLK
+    AdcbRegs.ADCSOC1CTL.bit.TRIGSEL = 5;                // SOC1: ePWM1 SOCA/C로 트리거
+
+    AdcbRegs.ADCSOC2CTL.bit.CHSEL = 2;            // SOC2 : ADCINB2 채널 변환
+    AdcbRegs.ADCSOC2CTL.bit.ACQPS = ACQPS;              // (S/H 시간) 설정 ACQPS = 9, 100ns = (ACQPS+1)/SYSCLK
+    AdcbRegs.ADCSOC2CTL.bit.TRIGSEL = 5;                // SOC2: ePWM1 SOCA/C로 트리거
+
+    EDIS;
+
+    //Setup VREF as external
+    ADC_setVREF(ADCC_BASE, ADC_REFERENCE_EXTERNAL, ADC_REFERENCE_3_3V);
+
+    // ADC 모드 설정 및 Power-up
+    EALLOW;
+    AdccRegs.ADCCTL2.bit.PRESCALE = 6;                  // ADCCLK = SYSCLK / 4 = 25Mhz, SYSCLK = 100MHz
+    AdccRegs.ADCCTL1.bit.INTPULSEPOS = 1;               // ADC Interrupt Pulse Position: 변환종료 후 발생
+    AdccRegs.ADCCTL1.bit.ADCPWDNZ = 1;                  // ADC 시동(Power-up)
+    DELAY_US(1000);                                     // ADC가 시동되는 동안 1ms 지연
+    EDIS;
+
+    // ADC SOC(채널, S/H시간, 트리거소스) 및 인터럽트 설정
+    EALLOW;
+
+    AdccRegs.ADCSOC0CTL.bit.CHSEL = 0;              // SOC0 : ADCINC0 채널 변환
+    AdccRegs.ADCSOC0CTL.bit.ACQPS = ACQPS;              // (S/H 시간) 설정 ACQPS = 9, 100ns = (ACQPS+1)/SYSCLK
+    AdccRegs.ADCSOC0CTL.bit.TRIGSEL = 5;                // SOC0: ePWM1 SOCA/C로 트리거
+
+    AdccRegs.ADCSOC1CTL.bit.CHSEL = 1;            // SOC1 : ADCINC1 채널 변환
+    AdccRegs.ADCSOC1CTL.bit.ACQPS = ACQPS;              // (S/H 시간) 설정 ACQPS = 9, 100ns = (ACQPS+1)/SYSCLK
+    AdccRegs.ADCSOC1CTL.bit.TRIGSEL = 5;                // SOC1: ePWM1 SOCA/C로 트리거
+
+    EDIS;
+}
+

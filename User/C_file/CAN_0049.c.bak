@@ -1,0 +1,72 @@
+/*
+ * CAN_0049.c
+ *
+ *  Created on: 2021. 5. 9.
+ *      Author: Plasma Science
+ */
+#include "UserDefine.h"
+
+
+    //
+    // Setup send and receive buffers
+    //
+
+    //
+    // Loop Forever - Send and Receive data continuously
+    //
+void CAN_loop(void)
+{
+    int i;
+
+    for(i=0;i<sizeof(CAN_TX);i++)
+        {
+        txMsgData[2*i] = MB.Arr[i]&0x00ff;
+        txMsgData[2*i+1] = (MB.Arr[i]&0xff00)>>8;
+        }
+
+
+
+    //
+    // Send CAN message data from message object 1
+    //
+    CAN_sendMessage(CANA_BASE, 1, 8, txMsgData);
+
+//    DEVICE_DELAY_US(250000);
+
+
+    //
+    // Read CAN message object 2 and check for new data
+    //
+
+    if (CAN_readMessage(CANA_BASE, 2, rxMsgData))
+    {
+        ARRTOF(Inv_Power,0);
+        ARRTOF(Peak_Power,1);
+    }
+    if (CAN_readMessage(CANA_BASE, 3, &rxMsgData[8]))
+    {
+        ARRTOF(Inv_cnt,2);
+        ARRTOF(Inv_ready,3);
+    }
+    if (CAN_readMessage(CANA_BASE, 4, &rxMsgData[16]))
+    {
+        ARRTOF(Total_power,4);
+        ARRTOF(IGBT_Tempurature,5);
+    }
+    if (CAN_readMessage(CANA_BASE, 5, &rxMsgData[24]))
+    {
+        ARRTOF(Line_Freq,6);
+        ARRTOF(Line_V,7);
+    }
+    if (CAN_readMessage(CANA_BASE, 6, &rxMsgData[32]))
+    {
+        ARRTOF(Line_Cur,8);
+        ARRTOF(Inv_sequence,9);
+    }
+    if (CAN_readMessage(CANA_BASE, 7, &rxMsgData[40]))
+    {
+        ARRTOF(Max_power,10);
+        ARRTOF(DCAC_fault,11);
+    }
+}
+

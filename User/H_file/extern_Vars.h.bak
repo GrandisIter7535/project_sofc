@@ -1,0 +1,94 @@
+/*
+ * extern_Vars.h
+ *
+ *  Created on: 2021. 4. 12.
+ *      Author: user
+ */
+
+
+
+extern float DA_1, DA_2, DA_3, DA_0;
+
+extern unsigned int CNT_10ms;
+
+extern float PWM_10ms_inv;
+extern float PWM_100ms_inv;
+extern float PWM_500ms_inv;
+extern float PWM_1s_inv;
+
+extern int HC;
+
+extern uint32_t ControlAddr;
+extern uint16_t status;
+
+extern uint16_t passCount;
+extern uint16_t failCount;
+
+extern uint16_t TX_MsgBuffer[];
+extern uint16_t RX_MsgBuffer[];
+extern uint16_t AvailableI2C_slaves[];
+
+extern uint16_t Eeprom_wirte_flag;
+
+extern struct I2CHandle EEPROM;
+extern struct I2CHandle TempSensor;
+
+extern struct I2CHandle *currentResponderPtr;                   // Used in interrupt
+extern struct I2CHandle *currentSlavePtr;
+
+
+
+//MODBUS º¯¼ö//
+extern unsigned int MB_CRC_Check2;
+extern unsigned char MB_CRC_H2;
+extern unsigned char MB_CRC_L2;
+extern unsigned char MB_CRC_Check_Fault_Flag2;
+//
+extern unsigned int MB_CRC_Check4;
+extern unsigned char MB_CRC_H4;
+extern unsigned char MB_CRC_L4;
+extern unsigned char MB_CRC_Check_Fault_Flag4;
+
+extern unsigned int MB_CRC_Check7;
+extern unsigned char MB_CRC_H7;
+extern unsigned char MB_CRC_L7;
+extern unsigned char MB_CRC_Check_Fault_Flag7;
+
+extern unsigned int MB_CRC_Check9;
+extern unsigned char MB_CRC_H9;
+extern unsigned char MB_CRC_L9;
+extern unsigned char MB_CRC_Check_Fault_Flag9;
+
+extern unsigned int MB_CRC_Check10;
+extern unsigned char MB_CRC_H10;
+extern unsigned char MB_CRC_L10;
+extern unsigned char MB_CRC_Check_Fault_Flag10;
+
+
+
+////////////////////////////////UI-DSP////////////////////////////////
+extern unsigned char Master_Transmit_Data[];
+extern unsigned char Master_Read_Request_Flag;
+extern unsigned char Master_Read_Transmit_Flag;
+
+
+extern unsigned char Master_Read_Data[];
+extern unsigned char Master_Write_Receive_Flag;
+extern unsigned char Master_Write_Transmit_Ready;
+extern unsigned char Master_Write_Response_Flag;
+extern unsigned char Master_SingleWrite_Response_Flag;
+
+////////////////////////////////DSP-AMI////////////////////////////////
+extern unsigned char aucCRCHi[];
+
+extern unsigned char aucCRCLo[];
+
+extern unsigned char TX_Buff_Num_b;
+
+
+////////////////////////////////CAN
+extern uint16_t txMsgData[], rxMsgData[];
+extern uint32_t msgCount;
+
+extern float DJ, DJ1, DJ2, DJ3;
+

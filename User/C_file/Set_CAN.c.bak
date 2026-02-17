@@ -1,0 +1,98 @@
+/*
+ * Set_CAN.c
+ *
+ *  Created on: 2021. 5. 9.
+ *      Author: Plasma Science
+ */
+#include "UserDefine.h"
+
+
+void Set_Gpio_CAN_A(void)
+{
+    GPIO_setPinConfig(DEVICE_GPIO_CFG_CANRXA);
+    GPIO_setPinConfig(DEVICE_GPIO_CFG_CANTXA);
+}
+
+void Init_CANA(void)
+{
+    CAN_initModule(CANA_BASE);
+    // Refer to the Driver Library User Guide for information on how to set
+    // tighter timing control. Additionally, consult the device data sheet
+    // for more information about the CAN module clocking.
+    //
+    CAN_setBitRate(CANA_BASE, DEVICE_SYSCLK_FREQ, 500000, 18);  //(uint32_t base, uint32_t clock, uint32_t bitRate, uint16_t bitTime)
+                                                                //uint32_t clock is the system clock for the device in Hz.
+                                                                //uint32_t bitRate is the desired bit rate.
+                                                                //
+#ifdef DC360V
+    // Enable CAN test mode
+//    CAN_enableTestMode(CANA_BASE, 100);
+
+    // Initialize the transmit message object used for sending CAN messages.
+    // Message Object Parameters:
+    //      Message Object ID Number: 1
+    //      Message Identifier: 0x101
+    //      Message Frame: CAN_MSG_FRAME_STD
+    //      Message Type: CAN_MSG_OBJ_TYPE_TX
+    //      Message ID Mask: 0
+    //      Message Object Flags:
+    //      Message Data Length: 8 Bytes
+    //
+    CAN_setupMessageObject(CANA_BASE, 1, 0x101, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_TX, 0, 0,TX_MSG_DATA_LENGTH);
+    // Initialize the transmit message object used for sending CAN messages.
+    // Message Object Parameters:
+    //      Message Object ID Number: 2
+    //      Message Identifier: 0x106
+    //      Message Frame: CAN_MSG_FRAME_STD
+    //      Message Type: CAN_MSG_OBJ_TYPE_RX
+    //      Message ID Mask: 0
+    //      Message Object Flags: CAN_MSG_OBJ_NO_FLAGS
+    //      Message Data Length: 8 Bytes
+    //
+    CAN_setupMessageObject(CANA_BASE, 2, 0x102, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 0, CAN_MSG_OBJ_NO_FLAGS,8);
+    CAN_setupMessageObject(CANA_BASE, 3, 0x103, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 0, CAN_MSG_OBJ_NO_FLAGS,8);
+    CAN_setupMessageObject(CANA_BASE, 4, 0x104, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 0, CAN_MSG_OBJ_NO_FLAGS,8);
+    CAN_setupMessageObject(CANA_BASE, 5, 0x105, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 0, CAN_MSG_OBJ_NO_FLAGS,8);
+    CAN_setupMessageObject(CANA_BASE, 6, 0x106, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 0, CAN_MSG_OBJ_NO_FLAGS,8);
+    CAN_setupMessageObject(CANA_BASE, 7, 0x107, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 0, CAN_MSG_OBJ_NO_FLAGS,8);
+
+#endif
+
+#ifdef DC750V
+    // Enable CAN test mode
+//    CAN_enableTestMode(CANA_BASE, 100);
+
+    // Initialize the transmit message object used for sending CAN messages.
+    // Message Object Parameters:
+    //      Message Object ID Number: 1
+    //      Message Identifier: 0x101
+    //      Message Frame: CAN_MSG_FRAME_STD
+    //      Message Type: CAN_MSG_OBJ_TYPE_TX
+    //      Message ID Mask: 0
+    //      Message Object Flags:
+    //      Message Data Length: 8 Bytes
+    //
+    CAN_setupMessageObject(CANA_BASE, 1, 0x601, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_TX, 0, 0,TX_MSG_DATA_LENGTH);
+    // Initialize the transmit message object used for sending CAN messages.
+    // Message Object Parameters:
+    //      Message Object ID Number: 2
+    //      Message Identifier: 0x106
+    //      Message Frame: CAN_MSG_FRAME_STD
+    //      Message Type: CAN_MSG_OBJ_TYPE_RX
+    //      Message ID Mask: 0
+    //      Message Object Flags: CAN_MSG_OBJ_NO_FLAGS
+    //      Message Data Length: 8 Bytes
+    //
+    CAN_setupMessageObject(CANA_BASE, 2, 0x602, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 0, CAN_MSG_OBJ_NO_FLAGS,8);
+    CAN_setupMessageObject(CANA_BASE, 3, 0x603, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 0, CAN_MSG_OBJ_NO_FLAGS,8);
+    CAN_setupMessageObject(CANA_BASE, 4, 0x604, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 0, CAN_MSG_OBJ_NO_FLAGS,8);
+    CAN_setupMessageObject(CANA_BASE, 5, 0x605, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 0, CAN_MSG_OBJ_NO_FLAGS,8);
+    CAN_setupMessageObject(CANA_BASE, 6, 0x606, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 0, CAN_MSG_OBJ_NO_FLAGS,8);
+    CAN_setupMessageObject(CANA_BASE, 7, 0x607, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 0, CAN_MSG_OBJ_NO_FLAGS,8);
+#endif
+
+    CAN_startModule(CANA_BASE);
+
+}
+
+

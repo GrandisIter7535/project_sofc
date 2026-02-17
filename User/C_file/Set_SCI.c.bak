@@ -1,0 +1,72 @@
+/*
+ * Set_SCI.c
+ *
+ *  Created on: 2021. 4. 18.
+ *      Author: Plasma Science
+ */
+#include "UserDefine.h"
+
+void Set_Gpio_SCI_B(void)
+{
+    EALLOW;
+    GPIO_SetupPinMux(15, GPIO_MUX_CPU1, 2);
+    GPIO_SetupPinOptions(15, GPIO_INPUT, GPIO_PULLUP | GPIO_ASYNC); //v9.2  GPIO_PUSHPULL
+    GPIO_SetupPinMux(14, GPIO_MUX_CPU1, 2);
+    GPIO_SetupPinOptions(14, GPIO_OUTPUT, GPIO_ASYNC);
+    GpioDataRegs.GPACLEAR.bit.GPIO13 = 1;
+    EDIS;
+}
+
+void Init_SCIB(void)
+{
+    int i;
+    unsigned char j, k = 0;
+
+    // SCI 주요설정
+    ScibRegs.SCICTL1.bit.SWRESET = 0;       // SCI 소프트웨어 리셋
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ScibRegs.SCICCR.bit.STOPBITS = 0;
+    ScibRegs.SCICCR.bit.PARITY = 0;
+    ScibRegs.SCICCR.bit.PARITYENA = 0;
+    ScibRegs.SCICCR.bit.LOOPBKENA = 0;
+    ScibRegs.SCICCR.bit.ADDRIDLE_MODE = 0;
+    ScibRegs.SCICCR.bit.SCICHAR = 7;
+
+    ScibRegs.SCICTL1.bit.RXERRINTENA = 0;
+    ScibRegs.SCICTL1.bit.TXWAKE = 0;
+    ScibRegs.SCICTL1.bit.SLEEP = 0;
+    ScibRegs.SCICTL1.bit.TXENA = 1;
+    ScibRegs.SCICTL1.bit.RXENA = 1;
+
+    ScibRegs.SCICTL2.bit.TXINTENA = 0;
+    ScibRegs.SCICTL2.bit.RXBKINTENA = 0;
+    i = (int)(((float)25000000L/(BAUDRATE2*8.) - 1) + 0.5);
+    ScibRegs.SCIHBAUD.all = i >> 8;
+    ScibRegs.SCILBAUD.all = i & 0xFF;
+    // SCI의 송신 FIFO 설정
+    ScibRegs.SCIFFTX.bit.SCIFFENA = 1;      // SCI FIFO 사용 설정 Enable
+    ScibRegs.SCIFFTX.bit.TXFFINTCLR = 1;    // SCI 송신 FIFO 인터럽트 플래그 클리어
+    ScibRegs.SCIFFTX.bit.TXFIFORESET = 1;  // SCI 송신 FIFO RE-enable
+    ScibRegs.SCIFFTX.bit.SCIRST = 1;        // SCI 리셋 해제
+
+    // SCI의 수신 FIFO 설정
+    ScibRegs.SCIFFRX.bit.RXFFOVRCLR =0;
+
+    ScibRegs.SCIFFRX.bit.RXFFINTCLR = 1;    // SCI 수신 FIFO 인터럽트 플래그 클리어
+    ScibRegs.SCIFFRX.bit.RXFFIENA = 1;      // SCI 수신 FIFO 인터럽트 Enable
+    ScibRegs.SCIFFRX.bit.RXFIFORESET = 1;   // SCI 수신 FIFO RE-enable
+    ScibRegs.SCIFFRX.bit.RXFFIL = 1;        // SCI 수신 FIFO 인터럽트 레벨 설정
+
+    ScibRegs.SCICTL1.bit.SWRESET = 1;       // SCI 소프트웨어 리셋 해제
+    ScibRegs.SCIFFCT.bit.FFTXDLY = 0;       // SCI DELAY 0
+
+    for(j=0;j<=32;j++){
+        Master_Transmit_Data[j] = 0x00;
+    }
+    for(k=0;k<=16;k++){
+        Master_Read_Data[k] = 0x00;
+    }
+
+
+}

@@ -1,0 +1,31 @@
+/*
+ * Interrupt_ADC.c
+ *
+ *  Created on: 2021. 4. 13.
+ *      Author: Plasma Science
+ */
+
+#include "UserDefine.h"
+
+
+unsigned int CCTime_max, CCTime;
+
+float HC7 = 0.5;
+Uint32 HC8 = 36000;
+
+
+interrupt void adca1_isr(void)
+{
+    //Interrupt frequency = 36kHz
+    VARI.CNT.uiADC2_isrCnt++;
+    //18kHz 55.55556us
+    if(VARI.CNT.uiADC2_isrCnt > 1){
+        VARI.CNT.uiADC2_isrCnt = 0;
+        CONTROL_isr();
+    }
+
+    AdcaRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //clear INT1 flag
+    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
+}
+
+

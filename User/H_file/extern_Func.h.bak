@@ -1,0 +1,135 @@
+/*
+ * extern_Func.h
+ *
+ *  Created on: 2021. 4. 12.
+ *      Author: user
+ */
+
+//main.c
+//void MemCopy(Uint16 *SourceAddr, Uint16* SourceEndAddr, Uint16* DestAddr);
+
+void Set_Gpio(void);
+void Set_Gpio_SPI_A(void);
+void Set_Gpio_SCI_B(void);
+
+void Init_EPwm(void);
+void Init_SPIA(void);
+void Init_SCIB(void);
+
+void PWM_Enable(void);
+#pragma CODE_SECTION(PWM_Enable, ".TI.ramfunc");
+void PWM_Disable(void);
+#pragma CODE_SECTION(PWM_Disable, ".TI.ramfunc");
+
+void firm_Init(void);
+
+void Init_ADC(unsigned int CHSEL, Uint16 ACQPS);
+
+interrupt void adca1_isr(void);
+#pragma CODE_SECTION(adca1_isr, ".TI.ramfunc");
+
+void OS_10ms(void);
+#pragma CODE_SECTION(OS_10ms, ".TI.ramfunc");
+void OS_100ms(void);
+#pragma CODE_SECTION(OS_100ms, ".TI.ramfunc");
+void OS_500ms(void);
+#pragma CODE_SECTION(OS_500ms, ".TI.ramfunc");
+void OS_1s(void);
+#pragma CODE_SECTION(OS_1s, ".TI.ramfunc");
+
+void CONTROL_isr(void);
+#pragma CODE_SECTION(CONTROL_isr, ".TI.ramfunc");
+
+void ADC_cal(void);
+#pragma CODE_SECTION(ADC_cal, ".TI.ramfunc");
+void ADC_AVR_10ms(void);
+#pragma CODE_SECTION(ADC_AVR_10ms, ".TI.ramfunc");
+void ADC_AVR_100ms(void);
+#pragma CODE_SECTION(ADC_AVR_100ms, ".TI.ramfunc");
+void ADC_AVR_500ms(void);
+#pragma CODE_SECTION(ADC_AVR_500ms, ".TI.ramfunc");
+void ADC_AVR_1s(void);
+#pragma CODE_SECTION(ADC_AVR_1s, ".TI.ramfunc");
+
+void Fault_reset(void);
+#pragma CODE_SECTION(Fault_reset, ".TI.ramfunc");
+void Fault_check_PWM(void);
+#pragma CODE_SECTION(Fault_check_PWM, ".TI.ramfunc");
+void Fault_check_10ms(void);
+#pragma CODE_SECTION(Fault_check_10ms, ".TI.ramfunc");
+void Fault_check_100ms(void);
+#pragma CODE_SECTION(Fault_check_100ms, ".TI.ramfunc");
+void Fault_check_1s(void);
+#pragma CODE_SECTION(Fault_check_1s, ".TI.ramfunc");
+interrupt void Fault_isr(void);
+#pragma CODE_SECTION(Fault_isr, ".TI.ramfunc");
+interrupt void xint1_isr(void);
+#pragma CODE_SECTION(xint1_isr, ".TI.ramfunc");
+
+void InitSerialDac(void);
+void SerialDacOut(void);
+#pragma CODE_SECTION(SerialDacOut, ".TI.ramfunc");
+
+void CTRL_BST_Stop(void);
+void CTRL_BST_Inint(void);
+void CTRL_BST_VC(void);
+#pragma CODE_SECTION(CTRL_BST_VC, ".TI.ramfunc");
+void CTRL_BST_CC(void);
+#pragma CODE_SECTION(CTRL_BST_CC, ".TI.ramfunc");
+
+/////////////////////////////////////////I2C_A//////////////////////////////////////////
+void Init_I2CA(void);
+
+void Set_Gpio_I2C_A(void);
+
+void EEPROM_Phase(void);
+
+interrupt void i2cFIFO_isr(void);
+#pragma CODE_SECTION(i2cFIFO_isr, ".TI.ramfunc");
+interrupt void i2c_isr(void);
+#pragma CODE_SECTION(i2c_isr, ".TI.ramfunc");
+
+
+uint16_t I2C_TransmitSlaveAddress_ControlBytes(struct I2CHandle *I2C_Params);
+uint16_t I2CBusScan(uint32_t base, uint16_t *pAvailableI2C_slaves);
+
+uint16_t I2C_MasterTransmitter(struct I2CHandle *I2C_Params);
+uint16_t I2C_MasterReceiver(struct I2CHandle *I2C_Params);
+uint16_t I2C_SlaveTransmitter(struct I2CHandle *I2C_Params);
+uint16_t I2C_SlaveReceiver(struct I2CHandle *I2C_Params);
+
+uint16_t checkBusStatus(uint32_t base);
+
+uint16_t handleNACK(uint32_t base);
+
+void handleI2C_ErrorCondition(struct I2CHandle *I2C_Params);
+void Write_Read_TX_RX_FIFO(struct I2CHandle *I2C_Params);
+////////////////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////CAN_A//////////////////////////////////////////
+void Set_Gpio_CAN_A(void);
+void Init_CANA(void);
+void CAN_loop(void);
+void Can_Struct_Data(void);
+////////////////////////////////////////////////////////////////////////////////////////
+
+//filter
+void IIR2CoeffInit(IIR2 *p_gIIR, float w0, float zeta );
+void IIR2Init(IIR2 *p_gIIR, int type, float w0, float zeta, float delT);
+float IIR2Update(IIR2 *p_gIIR, const float input);
+#pragma CODE_SECTION(IIR2Update, ".TI.ramfunc");
+
+
+/////////////////////////////////MODBUS
+interrupt void scibRxFifoIsr(void);
+void Master_Read_Request(void);
+void Master_Read_Transmit(void);
+void Master_Write_Parsing(void);
+void Master_Write_Response(void);
+unsigned short usMBCRC16(unsigned char *pucFrame, unsigned short usLen);
+void Modbus_Struct_Data(void);
+void Modbus_loop(void);
+
+
+

@@ -1,0 +1,99 @@
+/*
+ * OS.c
+ *
+ *  Created on: 2021. 4. 17.
+ *      Author: Plasma Science
+ */
+#include "UserDefine.h"
+
+void OS_10ms(void)
+{
+    VARI.CNT.uiADC_isrCnt = 0;
+    VARI.CNT.ui10msCnt++;
+    //10ms average
+    ADC_AVR_10ms();
+    //fault check, every 10ms
+    Fault_check_10ms();
+
+    EEPROM_Phase();
+    GpioDataRegs.GPBSET.bit.GPIO56 = 1;
+
+    Modbus_loop();
+    Modbus_Struct_Data();
+
+    if((VARI.PROC.ucBST_RUN)&&(!Eeprom_wirte_flag))
+    {
+        Eeprom_wirte_flag = 1;
+        VARI.PROC.ucI2C_EEPROM = 2;
+    }
+    else if((!VARI.PROC.ucBST_RUN)&&(Eeprom_wirte_flag))
+    {
+        Eeprom_wirte_flag = 0;
+        VARI.PROC.ucI2C_EEPROM = 2;
+    }
+}
+
+void OS_100ms(void)
+{
+    VARI.CNT.ui10msCnt = 0;
+    VARI.CNT.ui100msCnt++;
+    //100ms average
+    ADC_AVR_100ms();
+    //fault check, every 100ms
+    Fault_check_100ms();
+    CAN_loop();
+
+}
+
+void OS_500ms(void)
+{
+    VARI.CNT.ui100msCnt = 0;
+    VARI.CNT.ui500msCnt++;
+    //500ms average
+    ADC_AVR_500ms();
+
+    VARI.AVR.fFC_Power_100ms = VARI.AVR.fFC_V_100ms * VARI.AVR.fFC_I_100ms;
+    VARI.AVR.fEfficiency_500ms = __divf32(CAN.RX.Inv_Power.D32, VARI.AVR.fFC_Power_100ms)*100;
+}
+
+void OS_1s(void)
+{
+    VARI.CNT.ui500msCnt = 0;
+
+    if(VARI.FLAG.uiFAULT){
+        VARI.CNT.ui1sCnt++;
+        if(VARI.CNT.ui1sCnt > 10){
+            VARI.FLAG.uiRESET = 1;
+            VARI.CNT.ui1sCnt = 0;
+        }
+    }
+
+    //1s average
+    ADC_AVR_1s();
+    //fault check, every 1s
+    Fault_check_1s();
+    //Module ID Check
+    VARI.PROC.ucModule_ID = 31 - ((GpioDataRegs.GPBDAT.bit.GPIO33) + (GpioDataRegs.GPBDAT.bit.GPIO34 << 1)
+                              + (GpioDataRegs.GPBDAT.bit.GPIO39 << 2) + (GpioDataRegs.GPBDAT.bit.GPIO40 << 3)
+                              + (GpioDataRegs.GPBDAT.bit.GPIO56 << 4));
+    //FAN PWM Duty
+    if(VARI.PROC.ucBST_RUN) VARI.CTRL.fFAN_duty = 1.;
+    else VARI.CTRL.fFAN_duty = 0.2;
+    EPwm3Regs.CMPA.bit.CMPA = (Uint32)(EPwm3Regs.TBPRD * VARI.CTRL.fFAN_duty);
+
+    //Filter Gain
+//    IIR2CoeffInit(&VARI.FltDCLink_V2, VARI.FltDCLink_V2.w0, VARI.FltDCLink_V2.zeta);
+
+    //LED ON/OFF
+    if(!(VARI.PROC.ucBST_STATE == 99 || VARI.PROC.ucBST_STATE == 0)) GpioDataRegs.GPASET.bit.GPIO16 = 1;
+    else GpioDataRegs.GPACLEAR.bit.GPIO16 = 1;
+    if(VARI.FLAG.uiWARNNING) GpioDataRegs.GPASET.bit.GPIO25 = 1;
+    else GpioDataRegs.GPACLEAR.bit.GPIO25 = 1;
+    if(VARI.FLAG.uiFAULT) GpioDataRegs.GPASET.bit.GPIO12 = 1;
+    else GpioDataRegs.GPACLEAR.bit.GPIO12 = 1;
+
+
+}
+
+
+

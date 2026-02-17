@@ -1,0 +1,326 @@
+/*
+ * CTRL.c
+ *
+ *  Created on: 2021. 4. 16.
+ *      Author: Plasma Science
+ */
+#include "UserDefine.h"
+
+float KI_HC = 0.69;
+float KP_HC = 0.017;
+float DC2 = 60.;
+float CC_Ki = 0.004737408087;
+void CTRL_BST_Stop(void)
+{
+    PWM_Disable();
+    VARI.CTRL.fVC_pterm = 0.;
+    VARI.CTRL.fVC_iterm = 0.;
+    VARI.CTRL.fVC_iterm_old = 0.;
+    VARI.CTRL.fVC_out = 0;
+    VARI.CTRL.fCC_pterm = 0.;
+    VARI.CTRL.fCC_iterm = 0.;
+    VARI.CTRL.fCC_iterm_old = 0.;
+    VARI.CTRL.fCC_out = 0;
+    VARI.CTRL.fFC_VL = 0;
+    VARI.CTRL.fFC_IL_ref = VARI.ADC.fFC_I;
+    VARI.CTRL.fBST_V_ref = VARI.AVR.fDCLink_V_mov;
+    VARI.CTRL.fBST_duty = 0.08;
+
+//    VARI.C_CMD.fFC_I_max = 0.5;
+    PARA.LIMIT.fFC_IL_max = 0.;
+
+
+    EPwm1Regs.CMPA.bit.CMPA = 0;
+    EPwm2Regs.CMPA.bit.CMPA = 0;
+
+    PARA.LIMIT.fFC_IL_max = 0.;
+    VARI.C_CMD.fFC_I_max = 0.;
+
+
+#ifdef DC360V
+    CAN.Vari.RX.Inv_sequence = 0;
+#endif
+
+
+#ifdef DC360V
+    VARI.C_CMD.fBST_V = 380.;
+#endif
+#ifdef DC750V
+    VARI.C_CMD.fBST_V = 550.;//750.;
+#endif
+////
+//    PWM_Enable();
+//    VARI.CTRL.fBST_duty = 0.6;
+
+}
+
+void CTRL_BST_Inint(void)
+{
+    PWM_Enable();
+
+////// Duty Open Loop
+#ifdef BST_VC
+    if(VARI.FILTER.fDCLink_V_LPF2 < VARI.CTRL.fOften_ref){
+        if(VARI.C_CMD.fBST_Duty > VARI.CTRL.fBST_duty){
+            VARI.CTRL.fBST_duty += (VARI.CTRL.fdDdt * TC);
+            if(VARI.C_CMD.fBST_Duty < VARI.CTRL.fBST_duty){ VARI.CTRL.fBST_duty = VARI.C_CMD.fBST_Duty;}
+        }
+        else { VARI.CTRL.fBST_duty = VARI.C_CMD.fBST_Duty;}
+    }
+    else{
+        VARI.CTRL.fBST_V_ref = VARI.FILTER.fDCLink_V_LPF2;
+        VARI.CTRL.fDCLink_Ic =  VARI.CTRL.fFC_IL_ref * PriToSec_inv;// - VARI.ADC.fOUT_I;
+//        if(VARI.FILTER.fClamp_V_LPF < 60.) VARI.FILTER.fClamp_V_LPF = 60.;
+//        VARI.CTRL.fFC_VL = VARI.CTRL.fBST_duty * VARI.FILTER.fClamp_V_LPF;
+
+        DC2 = VARI.FILTER.fDCLink_V_LPF * SecToPri * 2.;
+        if(DC2 < 60.) DC2 = 60.;
+        VARI.CTRL.fFC_VL = VARI.CTRL.fBST_duty * DC2;
+
+        VARI.CTRL.fVC_iterm =  (VARI.CTRL.fDCLink_Ic - VARI.CTRL.fVC_pterm);
+        VARI.CTRL.fCC_iterm = (VARI.CTRL.fFC_VL - VARI.CTRL.fCC_pterm);
+        VARI.PROC.ucBST_STATE = STATE_BST_VC;
+    }
+#endif
+
+#ifdef BST_VC
+//    VARI.PROC.ucBST_STATE = STATE_BST_VC;
+    VARI.CTRL.fBST_V_ref = VARI.FILTER.fDCLink_V_LPF2;
+    VARI.CTRL.fFC_IL_ref =  VARI.FILTER.fFC_I_LPF;
+
+//    VARI.CTRL.fFC_VL = VARI.CTRL.fBST_duty * VARI.FILTER.fClamp_V_LPF;
+//    VARI.CTRL.fCC_iterm = (VARI.CTRL.fFC_VL - VARI.CTRL.fCC_pterm);
+//    VARI.CTRL.fCC_pterm = VARI.CTRL.fCC_kp * (-(1 - VARI.CTRL.fCC_kip) *  VARI.FILTER.fFC_I_LPF);
+//
+//    VARI.CTRL.fDCLink_Ic =  VARI.CTRL.fFC_IL_ref * PriToSec_inv;//  * (1 - VARI.CTRL.fBST_duty);// - VARI.FILTER.fI_out_LPF*0.25;
+//    VARI.CTRL.fVC_iterm =  (VARI.CTRL.fDCLink_Ic - VARI.CTRL.fVC_pterm);
+//    VARI.CTRL.fVC_pterm = VARI.CTRL.fVC_kp * (-(1 - VARI.CTRL.fVC_kip) * VARI.FILTER.fDCLink_V_LPF2);
+
+    if(VARI.FILTER.fClamp_V_LPF < 65.) VARI.FILTER.fClamp_V_LPF = 65.;
+    VARI.CTRL.fFC_VL = VARI.CTRL.fBST_duty * VARI.FILTER.fClamp_V_LPF;
+    VARI.CTRL.fCC_iterm = VARI.CTRL.fFC_VL;
+
+    VARI.CTRL.fDcLink_IL = VARI.CTRL.fFC_IL_ref * SecToPri;
+    VARI.CTRL.fVC_iterm = VARI.CTRL.fDcLink_IL;
+#endif
+
+#ifdef BST_CC
+    VARI.PROC.ucBST_STATE = STATE_BST_CC;
+    VARI.CTRL.fBST_V_ref = VARI.FILTER.fDCLink_V_LPF2;
+    VARI.CTRL.fFC_IL_ref = VARI.FILTER.fFC_I_LPF;
+#endif
+
+
+
+}
+void CTRL_BST_VC(void)
+{
+
+#ifdef DC360V
+//    if((CAN.Vari.RX.Inv_sequence == 3.)&&(CAN.Vari.RX.Line_V >= 1500)) VARI.CTRL.fVC_kp = 0.0001700000139;
+//    else VARI.CTRL.fVC_kp = 0.01700000139;
+    if((MB.Word.Inv_cnt == 0) && (MB.Word.Line_V > 1500) && !(MB.Word.DCAC_fault_HW) && !(MB.Word.DCAC_fault_SW)){
+        VARI.C_CMD.fBST_V = 390.;
+    }
+    else{
+        VARI.C_CMD.fBST_V = 380.;
+    }
+
+
+#endif
+#ifdef DC750V
+//    VARI.CTRL.fVC_kp = 0.0001700000139;
+#endif
+
+    //Voltage reference RAMP-UP
+    if(VARI.C_CMD.fBST_V > VARI.CTRL.fBST_V_ref){
+        VARI.CTRL.fBST_V_ref += VARI.CTRL.fdVdt * TC;
+        if(VARI.C_CMD.fBST_V < VARI.CTRL.fBST_V_ref) VARI.CTRL.fBST_V_ref = VARI.C_CMD.fBST_V;
+    }
+    else if((VARI.C_CMD.fBST_V < VARI.CTRL.fBST_V_ref)){
+        VARI.CTRL.fBST_V_ref -= VARI.CTRL.fdVdt * TC;
+        if(VARI.C_CMD.fBST_V > VARI.CTRL.fBST_V_ref) VARI.CTRL.fBST_V_ref = VARI.C_CMD.fBST_V;
+    }
+    else VARI.CTRL.fBST_V_ref = VARI.C_CMD.fBST_V;
+
+    //PI Control -- Voltage
+#ifdef DC360V
+    VARI.CTRL.fVC_err = VARI.CTRL.fBST_V_ref - VARI.AVR.fDCLink_V_mov;
+#endif
+#ifdef DC750V
+    VARI.CTRL.fVC_err = VARI.CTRL.fBST_V_ref - VARI.FILTER.fDCLink_V_LPF2;
+#endif
+
+//    if(VARI.C_CMD.fFC_I_max < 9){
+//        VARI.CTRL.fVC_err = VARI.CTRL.fBST_V_ref - VARI.FILTER.fDCLink_V_LPF2;
+//    }
+    VARI.CTRL.fVC_iterm += VARI.CTRL.fVC_ki * (VARI.CTRL.fVC_err);// - VARI.CTRL.fVC_ka * (VARI.CTRL.fVC_out - VARI.CTRL.fDCLink_Ic));
+    VARI.CTRL.fVC_iterm_old = VARI.CTRL.fVC_iterm;
+    VARI.CTRL.fVC_pterm = VARI.CTRL.fVC_kp * (VARI.CTRL.fVC_kip * VARI.CTRL.fVC_err - (1 - VARI.CTRL.fVC_kip) * VARI.FILTER.fDCLink_V_LPF2);
+    VARI.CTRL.fVC_out = VARI.CTRL.fVC_iterm + VARI.CTRL.fVC_pterm;
+    VARI.CTRL.fDCLink_Ic = VARI.CTRL.fVC_out;
+
+#ifdef DC360V
+    if(VARI.CTRL.fDCLink_Ic > 7.7){//3 = output maximum current
+        VARI.CTRL.fDCLink_Ic = 7.7;
+        VARI.CTRL.fVC_out = VARI.CTRL.fDCLink_Ic;
+        VARI.CTRL.fVC_iterm =  (VARI.CTRL.fDCLink_Ic - VARI.CTRL.fVC_pterm);
+
+    }
+    else if(VARI.CTRL.fDCLink_Ic < -0.2){
+        VARI.CTRL.fDCLink_Ic = -0.2;
+        VARI.CTRL.fVC_out = VARI.CTRL.fDCLink_Ic;
+        VARI.CTRL.fVC_iterm =  (VARI.CTRL.fDCLink_Ic - VARI.CTRL.fVC_pterm);
+    }
+#endif
+
+#ifdef DC750V
+    if(VARI.CTRL.fDCLink_Ic > 4.){//3 = output maximum current
+        VARI.CTRL.fDCLink_Ic = 4.;
+        VARI.CTRL.fVC_out = VARI.CTRL.fDCLink_Ic;
+        VARI.CTRL.fVC_iterm =  (VARI.CTRL.fDCLink_Ic - VARI.CTRL.fVC_pterm);
+    }
+    else if(VARI.CTRL.fDCLink_Ic < -0.1){
+        VARI.CTRL.fDCLink_Ic = -0.1;
+        VARI.CTRL.fVC_out = VARI.CTRL.fDCLink_Ic;
+        VARI.CTRL.fVC_iterm =  (VARI.CTRL.fDCLink_Ic - VARI.CTRL.fVC_pterm);
+    }
+#endif
+
+
+    //Feed forward OUT_I
+    VARI.CTRL.fDcLink_IL = VARI.CTRL.fDCLink_Ic;// + VARI.AVR.fOUT_I_100ms;
+    VARI.CTRL.fFC_IL_ref = VARI.CTRL.fDcLink_IL * SecToPri_inv;//__divf32((VARI.CTRL.fDcLink_IL * SecToPri_inv), (1 - VARI.CTRL.fBST_duty));
+
+    //FC_I Limit
+    //FC_I_max ramp up
+#ifndef NOT_COMM
+//    if((VARI.C_CMD.fFC_I_max < 0.5) || (CAN.RX.Inv_sequence.Byte4 < 2.8)) VARI.C_CMD.fFC_I_max = 0.5;
+#endif
+
+    if(VARI.C_CMD.fFC_I_max < 0.5) VARI.C_CMD.fFC_I_max = 0.5;
+
+    if(!(VARI.C_CMD.fFC_I_max == PARA.LIMIT.fFC_IL_max))
+    {
+        if(VARI.C_CMD.fFC_I_max > PARA.LIMIT.fFC_IL_max){
+            PARA.LIMIT.fFC_IL_max += VARI.CTRL.fdIdt * TC;
+            if(VARI.C_CMD.fFC_I_max < PARA.LIMIT.fFC_IL_max) PARA.LIMIT.fFC_IL_max = VARI.C_CMD.fFC_I_max;
+        }
+        else{
+            PARA.LIMIT.fFC_IL_max -= VARI.CTRL.fdIdt * TC;
+            if(VARI.C_CMD.fFC_I_max > PARA.LIMIT.fFC_IL_max) PARA.LIMIT.fFC_IL_max = VARI.C_CMD.fFC_I_max;
+        }
+    }
+
+
+#ifdef DC750V
+    if(VARI.CTRL.fFC_IL_ref > PARA.LIMIT.fFC_IL_max){
+        VARI.CTRL.fFC_IL_ref = PARA.LIMIT.fFC_IL_max;
+        VARI.CTRL.fDCLink_Ic =  VARI.CTRL.fFC_IL_ref * PriToSec_inv;// - VARI.FILTER.fI_out_LPF*0.25;
+        VARI.CTRL.fVC_iterm =  (VARI.CTRL.fDCLink_Ic - VARI.CTRL.fVC_pterm);
+    }
+    else if((VARI.CTRL.fFC_IL < PARA.LIMIT.fFC_IL_min) || (VARI.FILTER.fDCLink_V_LPF2 > 800.)){
+        VARI.CTRL.fFC_IL_ref = PARA.LIMIT.fFC_IL_min;
+        VARI.CTRL.fDCLink_Ic =  VARI.CTRL.fFC_IL_ref * PriToSec_inv;// - VARI.FILTER.fI_out_LPF*0.25;
+        VARI.CTRL.fVC_iterm =  (VARI.CTRL.fDCLink_Ic - VARI.CTRL.fVC_pterm);
+    }
+#endif
+#ifdef DC360V
+     if(VARI.CTRL.fFC_IL_ref > PARA.LIMIT.fFC_IL_max){
+         VARI.CTRL.fFC_IL_ref = PARA.LIMIT.fFC_IL_max;
+         VARI.CTRL.fDCLink_Ic =  VARI.CTRL.fFC_IL_ref * PriToSec_inv;//  * (1 - VARI.CTRL.fBST_duty);// - VARI.FILTER.fI_out_LPF*0.25;
+         VARI.CTRL.fVC_iterm =  (VARI.CTRL.fDCLink_Ic - VARI.CTRL.fVC_pterm);
+     }
+     else if(VARI.CTRL.fFC_IL < PARA.LIMIT.fFC_IL_min){
+         VARI.CTRL.fFC_IL_ref = PARA.LIMIT.fFC_IL_min;
+         VARI.CTRL.fDCLink_Ic =  VARI.CTRL.fFC_IL_ref * PriToSec_inv;//  * (1 - VARI.CTRL.fBST_duty);// - VARI.FILTER.fI_out_LPF*0.25;
+         VARI.CTRL.fVC_iterm =  (VARI.CTRL.fDCLink_Ic - VARI.CTRL.fVC_pterm);
+     }
+
+     if((VARI.FILTER.fDCLink_V_LPF2 > 420.) && (VARI.CTRL.fFC_IL_ref > 1.)){
+         VARI.CTRL.fFC_IL_ref = 1.;
+         VARI.CTRL.fDCLink_Ic =  VARI.CTRL.fFC_IL_ref * PriToSec_inv;//  * (1 - VARI.CTRL.fBST_duty);// - VARI.FILTER.fI_out_LPF*0.25;
+         VARI.CTRL.fVC_iterm =  (VARI.CTRL.fDCLink_Ic - VARI.CTRL.fVC_pterm);
+
+     }
+
+     if(VARI.FILTER.fDCLink_V_LPF2 > VARI.C_CMD.fBST_V) {
+         VARI.CTRL.fVC_ki = 3.94784e-7;
+         VARI.CTRL.fVC_kp = KP_HC;
+     }
+     else if(VARI.FILTER.fDCLink_V_LPF2 < (VARI.C_CMD.fBST_V - 5.)) {
+
+             VARI.CTRL.fVC_ki = KI_HC;
+             VARI.CTRL.fVC_kp = KP_HC;
+     }
+
+
+     if((CAN.Vari.RX.Inv_sequence == 3.)&&(CAN.Vari.RX.Line_V >= 1500)) VARI.CTRL.fCC_ki = 0.08940755576;
+     else VARI.CTRL.fCC_ki = CC_Ki;
+
+
+#endif
+
+
+}
+
+void CTRL_BST_CC(void)
+{
+#ifdef BST_CC
+    //Voltage reference RAMP-UP
+    if(VARI.C_CMD.fBST_I > 60.) VARI.C_CMD.fBST_I = 60.;
+
+    if(VARI.C_CMD.fBST_I > VARI.CTRL.fFC_IL_ref){
+        VARI.CTRL.fFC_IL_ref += VARI.CTRL.fdIdt * TC;
+        if(VARI.C_CMD.fBST_I < VARI.CTRL.fFC_IL_ref) VARI.CTRL.fFC_IL_ref = VARI.C_CMD.fBST_I;
+    }
+    else{
+        VARI.CTRL.fFC_IL_ref -= VARI.CTRL.fdIdt * TC;
+        if(VARI.C_CMD.fBST_I > VARI.CTRL.fFC_IL_ref) VARI.CTRL.fFC_IL_ref = VARI.C_CMD.fBST_I;
+    }
+#endif
+
+    //PI Control -- Current
+    VARI.CTRL.fCC_err = VARI.CTRL.fFC_IL_ref - VARI.FILTER.fFC_I_LPF;
+    VARI.CTRL.fCC_iterm += VARI.CTRL.fCC_ki * (VARI.CTRL.fCC_err - VARI.CTRL.fCC_ka * (VARI.CTRL.fCC_out - VARI.CTRL.fFC_VL));
+    VARI.CTRL.fCC_pterm = VARI.CTRL.fCC_kp * (VARI.CTRL.fCC_kip * VARI.CTRL.fCC_err - (1 - VARI.CTRL.fCC_kip) * VARI.ADC.fFC_I);
+    VARI.CTRL.fCC_out = VARI.CTRL.fCC_iterm + VARI.CTRL.fCC_pterm;
+
+    VARI.CTRL.fFC_VL = VARI.CTRL.fCC_out;
+
+    if(VARI.CTRL.fFC_VL > 90.){
+        VARI.CTRL.fFC_VL = 90.;
+        VARI.CTRL.fCC_iterm = (VARI.CTRL.fFC_VL - VARI.CTRL.fCC_pterm);
+    }
+    if(VARI.CTRL.fFC_VL < -10.){
+        VARI.CTRL.fFC_VL = -10.;
+        VARI.CTRL.fCC_iterm = (VARI.CTRL.fFC_VL - VARI.CTRL.fCC_pterm);
+    }
+
+    if(VARI.FILTER.fClamp_V_LPF < 60.) VARI.FILTER.fClamp_V_LPF = 60.;
+//    VARI.AVR.fClamp_V_100ms = 100.;
+
+    DC2 = VARI.FILTER.fDCLink_V_LPF * SecToPri * 2.;
+    if(DC2 < 70.) DC2 = 70.;
+
+
+    //Feed forward FC_V
+//    VARI.CTRL.fBST_duty = __divf32((VARI.CTRL.fFC_VL - VARI.FILTER.fFC_V_LPF + VARI.ADC.fClamp_V), VARI.AVR.fClamp_V_100ms);
+    VARI.CTRL.fBST_duty = __divf32((VARI.CTRL.fFC_VL), DC2);
+
+    //Duty Limit
+    if(VARI.CTRL.fBST_duty > 0.98){
+        VARI.CTRL.fBST_duty = 0.98;
+        VARI.CTRL.fFC_VL = VARI.CTRL.fBST_duty * DC2;
+//        VARI.CTRL.fFC_VL = VARI.CTRL.fBST_duty * VARI.FILTER.fClamp_V_LPF - VARI.FILTER.fClamp_V_LPF + VARI.FILTER.fFC_V_LPF;
+        VARI.CTRL.fCC_iterm = (VARI.CTRL.fFC_VL - VARI.CTRL.fCC_pterm);
+    }
+    else if(VARI.CTRL.fBST_duty < 0.00){
+        VARI.CTRL.fBST_duty = 0.00;
+        VARI.CTRL.fFC_VL = VARI.CTRL.fBST_duty * DC2;
+//        VARI.CTRL.fFC_VL = VARI.CTRL.fBST_duty * VARI.FILTER.fClamp_V_LPF - VARI.FILTER.fClamp_V_LPF + VARI.FILTER.fFC_V_LPF;
+        VARI.CTRL.fCC_iterm = (VARI.CTRL.fFC_VL - VARI.CTRL.fCC_pterm);
+    }
+    VARI.CTRL.fCC_iterm_old = VARI.CTRL.fCC_iterm;
+
+}

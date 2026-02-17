@@ -1,0 +1,523 @@
+/*
+ * extern_Struct.h
+ *
+ *  Created on: 2021. 4. 12.
+ *      Author: user
+ */
+
+
+//VARI//////////////////////////////////
+
+typedef struct
+{
+    float32 fFC_V;
+    float32 fFC_I;
+    float32 fClamp_V;
+    float32 fDCLink_V;
+    float32 fOUT_I;
+    float32 fTemp_HS1;
+    float32 fTemp_HS1_;
+    float32 fTemp_HS2;
+    float32 fTemp_HS2_;
+    float32 fTemp_em;
+
+} ADC_DATA;
+
+typedef struct
+{
+    float   DCLink_V_avr_buf[150];
+    float   Clamp_V_avr_buf[150];
+
+    float32 fDCLink_V_mov;
+    float32 fFC_I_mov;
+    float32 fClamp_V_mov;
+
+    float32 fDCLink_V_10ms;
+    float32 fTemp_HS1_10ms;
+    float32 fTemp_HS2_10ms;
+    float32 fTemp_em_10ms;
+    float32 fFC_I_10ms;
+
+    float32 fClamp_V_100ms;
+    float32 fFC_V_100ms;
+    float32 fFC_I_100ms;
+    float32 fDCLink_V_100ms;
+    float32 fOUT_I_100ms;
+    float32 fFC_Power_100ms;
+
+    float32 fEfficiency_500ms;
+
+
+    float32 fFC_V_sum;
+    float32 fClamp_V_sum;
+
+    float32 fTemp_HS1_10ms_sum;
+    float32 fTemp_HS2_10ms_sum;
+    float32 fTemp_em_10ms_sum;
+    float32 fDCLink_V_10ms_sum;
+    float32 fFC_I_10ms_sum;
+
+    float32 fFC_I_100ms_sum;
+    float32 fDCLink_V_100ms_sum;
+    float32 fOUT_I_100ms_sum;
+
+    float32 f10msCnt_inv;
+    float32 f100msCnt_inv;
+    float32 f500msCnt_inv;
+
+
+
+} AVR_DATA;
+
+
+typedef struct
+{
+    float32 fBST_duty;
+    float32 fdDdt;
+
+    float32 fBST_V_ref;
+    float32 fdVdt;
+    float32 fdIdt;
+
+
+    float32 fVC_err;
+    float32 fVC_iterm;
+    float32 fVC_iterm_old;
+    float32 fVC_pterm;
+    float32 fVC_out;
+    float32 fVC_kp;
+    float32 fVC_ki;
+    float32 fVC_ka;
+    float32 fVC_kip;
+    float32 fDCLink_Ic;
+    float32 fDcLink_IL;
+    float32 fFC_IL;
+    float32 fFC_IL_ref;
+
+    float32 fCC_err;
+    float32 fCC_iterm;
+    float32 fCC_iterm_old;
+    float32 fCC_pterm;
+    float32 fCC_out;
+    float32 fCC_kp;
+    float32 fCC_ki;
+    float32 fCC_ka;
+    float32 fCC_kip;
+    float32 fFC_VL;
+
+    float32 fFAN_duty;
+    Uint32  uiFAN_z;
+
+    float32 fOften_ref;
+
+
+
+} CTRL_DATA;
+
+typedef struct
+{
+    unsigned char ucModule_ID;
+    unsigned char ucBST_STATE;
+
+    unsigned char ucBST_RUN;
+    unsigned char ucI2C_EEPROM;
+
+} PROCESS_DATA;
+
+typedef struct
+{
+    float32 fBST_V;
+    float32 fBST_I;
+    float32 fFC_I_max;
+    float32 fFC_I_max_modbus;
+    float32 fBST_Duty;
+
+
+} CTRL_CMD;
+
+typedef struct
+{
+    Uint32 uiADC2_isrCnt;
+    Uint32 uiADC_isrCnt;
+    Uint32 ui10msCnt;
+    Uint32 ui100msCnt;
+    Uint32 ui500msCnt;
+    Uint32 ui1sCnt;
+    Uint32 uiCANCnt;
+    Uint32 uiFANcnt;
+    Uint32 ui120HzCNT;
+
+    Uint32 uiSUM10msCNT;
+    Uint32 uiSUM100msCNT;
+    Uint32 uiSUM500msCNT;
+    Uint32 uiSUM1sCNT;
+
+
+    Uint32 uiI2C_CNT;
+
+
+} CNT_DATA;
+
+typedef struct
+{
+
+
+    Uint32 uiFAULT;
+    Uint32 uiRESET;
+    Uint32 uiWARNNING;
+
+} FLAG;
+
+typedef struct
+{
+    float32 fFC_V_LPF;
+    float32 fFC_V_old;
+    float32 fClamp_V_old;
+    float32 fTemp_HS1;
+    float32 fTemp_HS1_old;
+    float32 fTemp_HS2;
+    float32 fTemp_HS2_old;
+
+
+    float32 fDCLink_V_LPF;
+    float32 fDCLink_V_LPF2;
+    float32 fFC_I_LPF;
+    float32 fFC_I_LPF2;
+    float32 fI_out_LPF;
+    float32 fClamp_V_LPF;
+
+
+    float32 fVC_out_LPF;
+
+
+    float32 fDCLink_V_old;
+
+
+
+
+} FILTER;
+
+typedef struct  {
+    int type;
+    float w0, zeta;
+    float delT;
+    float coeff[5], reg[2];
+}   IIR2;
+
+
+
+typedef struct
+{
+    Uint32 bDCLink_OV:1;
+    Uint32 bDCLink_OC:1;
+    Uint32 bFC_OV:1;
+    Uint32 bFC_UV:1;
+//-----------------------------------------------------------(4Bit)
+    Uint32 bFC_OC:1;
+    Uint32 bHW_OC:1;
+    Uint32 bI2C_fault:1;
+    Uint32 bModbus_fault:1;
+//-----------------------------------------------------------(8Bit)
+    Uint32 bCAN_fault:1;
+    Uint32 bTemp_em:1;
+    Uint32 bWarning:1;
+//-----------------------------------------------------------(12Bit)
+
+//-----------------------------------------------------------(16Bit)
+
+//-----------------------------------------------------------(20Bit)
+
+//-----------------------------------------------------------(24Bit)
+
+//-----------------------------------------------------------(28Bit)
+
+//-----------------------------------------------------------(32Bit)
+} Fault;
+
+union Fault_FLAG
+{
+    Uint32      all;
+    Fault       bit;
+};
+
+typedef struct
+{
+    Uint32 bFC_UV:1;
+    Uint32 bDCLink_UV:1;
+    Uint32 bFAN:1;
+//-----------------------------------------------------------(4Bit)
+
+//-----------------------------------------------------------(8Bit)
+
+//-----------------------------------------------------------(12Bit)
+
+//-----------------------------------------------------------(16Bit)
+
+//-----------------------------------------------------------(20Bit)
+
+//-----------------------------------------------------------(24Bit)
+
+//-----------------------------------------------------------(28Bit)
+
+//-----------------------------------------------------------(32Bit)
+} Warnning;
+
+union Warnning_FLAG
+{
+    Uint32          all;
+    Warnning        bit;
+};
+
+typedef struct
+{
+    ADC_DATA ADC;
+    AVR_DATA AVR;
+    CTRL_DATA CTRL;
+    PROCESS_DATA PROC;
+    CTRL_CMD  C_CMD;
+    CNT_DATA CNT;
+    FLAG FLAG;
+    FILTER FILTER;
+
+    IIR2 FltDCLink_V;
+    IIR2 FltDCLink_V2;
+    IIR2 FltFC_I;
+    IIR2 FltFC_I2;
+    IIR2 FltI_out;
+    IIR2 FltfVC_out;
+    IIR2 FltfClamp_V;
+
+    union Fault_FLAG FAULT;
+    union Warnning_FLAG WARN;
+
+
+
+
+} VARIABLE;
+
+extern VARIABLE VARI;
+////////////////////////////////////VARI
+
+
+
+//PARA//////////////////////////////////
+
+typedef struct
+{
+    float32 fScaleA0;
+    float32 fScaleA1;
+    float32 fScaleA2;
+    float32 fScaleB0;
+    float32 fScaleB1;
+    float32 fScaleB2;
+    float32 fScaleC0;
+    float32 fScaleC1;
+
+    float32 fOffsetA0;
+    float32 fOffsetA1;
+    float32 fOffsetA2;
+    float32 fOffsetB0;
+    float32 fOffsetB1;
+    float32 fOffsetB2;
+    float32 fOffsetC0;
+    float32 fOffsetC1;
+
+} ADC_GAIN;
+
+typedef struct
+{
+    float32 fFC_UV;
+    float32 fDCLink_UV;
+    float32 fTemp_em;
+    float32 fTemp_sw;
+    float32 fFAN;
+    float32 fClamp_OV;
+    float32 fFC_OV;
+    float32 fFC_OC;
+    float32 fDCLink_OC;
+    float32 fDCLink_OV;
+    float32 fModbus;
+    float32 fI2C;
+    Uint32  uiCAN;
+
+
+} Fault_Warnning_Level;
+
+typedef struct
+{
+    float32 fFC_IL_max;
+    float32 fFC_IL_min;
+
+
+} CTRL_Limit;
+
+typedef struct
+{
+    ADC_GAIN ADCGAIN;
+    Fault_Warnning_Level F_W_Level;
+    CTRL_Limit LIMIT;
+
+} PARAMETER;
+
+extern PARAMETER PARA;
+
+
+
+////////////////////////////////////PARA
+
+struct I2CHandle
+{
+    uint32_t base;
+    uint16_t SlaveAddr;                  // Slave address tied to the message.
+    uint32_t *pControlAddr;
+    uint16_t NumOfAddrBytes;
+    uint16_t *pTX_MsgBuffer;             // Pointer to TX message buffer
+    uint16_t *pRX_MsgBuffer;             // Pointer to RX message buffer
+    uint16_t NumOfDataBytes;             // Number of valid bytes in message.
+    struct I2CHandle *currentHandlePtr;
+
+    uint16_t numofSixteenByte;
+    uint16_t remainingBytes;
+
+    uint16_t WriteCycleTime_in_us;      //  Slave write cycle time. Depends on slave.
+                                        //  Please check slave device datasheet
+};
+
+
+extern struct I2CHandle *currentSlavePtr;
+
+
+////////////////////////MODBUS
+
+typedef union
+{
+    unsigned int Byte2;
+    struct
+    {
+        unsigned char D0:8;
+        unsigned char D1:8;
+
+    }Byte;
+}WordtoByte;
+
+
+typedef union
+{
+   unsigned long Byte4;
+   struct
+   {
+       unsigned char D0:8;
+       unsigned char D1:8;
+       unsigned char D2:8;
+       unsigned char D3:8;
+
+   }Byte;
+}LongtoByte;
+
+
+typedef union
+{
+    float D32;
+    struct
+    {
+        unsigned char D0:8;
+        unsigned char D1:8;
+        unsigned char D2:8;
+        unsigned char D3:8;
+
+    }Byte;
+}floattoByte;
+
+typedef union
+{
+    unsigned int Arr[23]; //Arr[(sizeof(MB.Word)-1)]
+    struct
+    {
+        uint16_t Start;
+        uint16_t Set_current;
+        uint16_t Set_power;
+        uint16_t Stand_alone;
+        uint16_t fFC_V;
+        uint16_t fFC_I;
+        uint16_t fFC_power;
+        uint16_t fFC_I_CMD;
+        uint16_t fEfficiency;
+        uint16_t fTemp_HS1;
+        uint16_t ucBST_RUN;
+
+        uint16_t Inv_Power;
+        uint16_t Peak_Power;
+        uint16_t Inv_cnt;
+        uint16_t Inv_ready;
+        uint16_t IGBT_Tempurature;
+        uint16_t Line_Freq;
+        uint16_t Line_V;
+        uint16_t Line_Cur;
+        uint16_t Inv_sequence;
+
+        uint16_t Max_power;
+
+        uint16_t DCDC_fault;
+        uint16_t DCAC_fault_HW;
+        uint16_t DCAC_fault_SW;
+
+
+    }Word;
+}MODBUS;
+
+//typedef union
+//{
+//    unsigned int Byte2;
+//    struct
+//    {
+//        unsigned char D0:8;
+//        unsigned char D1:8;
+//
+//    }Byte;
+//}WordtoByte;
+
+extern MODBUS MB;
+extern MODBUS *pMB;
+
+////MB.VARI
+//extern WordtoByte Start;
+
+extern WordtoByte Starting_Add2;
+extern WordtoByte NoRegs2;
+
+
+
+////////////////////////////CAN
+typedef struct
+{
+    WordtoByte Start;
+    WordtoByte Set_current;
+    WordtoByte Set_power;
+    WordtoByte Stand_alone;
+} CAN_TX;
+
+typedef struct
+{
+    floattoByte Inv_Power;
+    floattoByte Peak_Power;
+    floattoByte Inv_cnt;
+    floattoByte Inv_ready;
+    floattoByte Total_power;
+    floattoByte IGBT_Tempurature;
+    floattoByte Line_Freq;
+    floattoByte Line_V;
+    floattoByte Line_Cur;
+    LongtoByte Inv_sequence;
+    floattoByte Max_power;
+    LongtoByte DCAC_fault;
+
+} CAN_RX;
+
+typedef struct
+{
+    CAN_TX TX;
+    CAN_RX RX;
+} CAN_VARI;
+extern CAN_VARI CAN;
+
+
